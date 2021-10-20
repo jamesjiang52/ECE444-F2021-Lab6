@@ -1,5 +1,4 @@
 import pytest
-import os
 import json
 from pathlib import Path
 from project.app import app, db
@@ -78,6 +77,19 @@ def test_messages(client):
 
 def test_delete_message(client):
     """Ensure the messages are being deleted"""
-    rv = client.get('/delete/1')
+    rv = client.get("/delete/1")
+    data = json.loads(rv.data)
+    assert data["status"] == 0
+    assert "Please log in." in data["message"]
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.get("/delete/1")
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+
+def test_search(client):
+    """Ensure search is working"""
+    response = client.get("/search?query=testing", content_type="html/text")
+    assert b"You should be redirected" in response.data
+    assert b"query=testing" in response.data
+    assert response.status_code == 308  # should redirect
